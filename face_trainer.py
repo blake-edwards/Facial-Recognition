@@ -4,6 +4,7 @@ import argparse
 import pickle
 import cv2
 import os
+import time
 
 default_encoding_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "encodings.pickle")
 
@@ -29,26 +30,27 @@ else:
 
 print("[INFO] quantifying faces...")
 imagePaths = list(paths.list_images(args["dataset"]))
-knownEncodings = []  # initialize the list of known encodings and known names
+knownEncodings = [] 
 knownNames = []
 
-# loop over the image paths
 for (i, imagePath) in enumerate(imagePaths):
-    # extract the person name from the image path
+    print(imagePath+"\n")
     print("[INFO] processing image {}/{}".format(i + 1, len(imagePaths)))
     name = imagePath.split(os.path.sep)[-2]
-    image = cv2.imread(imagePath)
-    # cv2.imshow("face", image)
-    # cv2.waitKey(0)
+    image = cv2.imread(imagePath) # TODO: filepath correction
+    if image is None:
+        print("image is null")
+    #cv2.imshow("face", image)
+    #cv2.waitKey(0)
     rgb = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
     boxes = face_recognition.face_locations(rgb, model=args["detection_method"])
     encodings = face_recognition.face_encodings(rgb, boxes)
-    for encoding in encodings: # for loop to cover the case of multiple faces in the picture
+    for encoding in encodings:
         knownEncodings.append(encoding)
         knownNames.append(name)
     
 
-print("[INFO] serializing encodings...")  # writing the facial encodings and names to the disk
+print("[INFO] serializing encodings...") 
 data = {"encodings": knownEncodings, "names": knownNames}
 f = open(args["encodings"], "wb")
 f.write(pickle.dumps(data))
